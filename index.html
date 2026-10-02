@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>護理臨床評估與生命徵象統計系統</title>
+    
+    <!-- 圓潤親和字型 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        butter: {
+                            50: '#FFFEF7',
+                            100: '#FFFBEA',
+                            200: '#FFF3C4',
+                            300: '#FDE68A',
+                            400: '#FCD34D',
+                            500: '#F59E0B',
+                            600: '#D97706',
+                        },
+                        warmbrown: {
+                            600: '#78350F',
+                            700: '#5A2A0C',
+                            800: '#451A03',
+                        }
+                    },
+                    fontFamily: {
+                        cute: ['"Zen Maru Gothic"', 'Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'cute': '0 4px 0px #FDE68A',
+                        'cute-active': '0 1px 0px #FDE68A',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome 6 圖標庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js 統計圖表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', 'Nunito', sans-serif;
+            background-color: #FFFDF0;
+            background-image: radial-gradient(#FDE68A 0.85px, transparent 0.85px);
+            background-size: 26px 26px;
+        }
+
+        .cute-card {
+            background-color: #FFFFFF;
+            border: 2px solid #FEF08A;
+            box-shadow: 0 10px 25px -5px rgba(253, 224, 71, 0.12), 0 8px 10px -6px rgba(253, 224, 71, 0.08);
+        }
+
+        .btn-touch {
+            min-height: 44px;
+        }
+
+        /* 滾動條樣式 */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFFBEA;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FDE68A;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-warmbrown-800 flex flex-col justify-between">
+
+    <!-- 頂部導航 -->
+    <header class="bg-white/95 backdrop-blur-md border-b-2 border-butter-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-butter-400 to-amber-300 flex items-center justify-center text-white shadow-cute text-xl">
+                    🧸
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base sm:text-lg font-black text-warmbrown-800 tracking-wide">護理檢傷與臨床生命徵象系統</h1>
+                        <span class="text-[10px] bg-amber-100 text-amber-900 font-extrabold px-2 py-0.5 rounded-full hidden sm:inline-block">C4.5 決策輔助</span>
+                    </div>
+                    <p class="text-xs text-amber-700/70 font-bold">臨床生理數據收集 ‧ 決策樹推論 ‧ 即時統計</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="bg-butter-100 text-amber-800 border border-butter-300 rounded-full px-3 py-1 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    護理站運行中
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-8">
+        
+        <!-- 上半部：輸入區與診斷區 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- 左側卡片群：病患詳細資料、生命徵象與症狀 (佔 7 欄) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- 1. 病患詳細資料卡片 (姓名、性別、生日、歲數、評估人) -->
+                <div class="cute-card rounded-3xl p-5 sm:p-6 transition-all">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b-2 border-butter-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">📋</span>
+                            <h2 class="font-extrabold text-sm sm:text-base text-warmbrown-700">步驟 1：基本資訊與評估人</h2>
+                        </div>
+                        <span class="text-xs text-amber-600/80 font-bold">填寫生日可自動算年齡</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 text-xs">
+                        <!-- 姓名 -->
+                        <div class="sm:col-span-4">
+                            <label class="block font-bold text-warmbrown-700 mb-1">病患姓名 / 床號</label>
+                            <input type="text" id="patientName" placeholder="例如：陳大明 (3A-1)"
+                                class="w-full px-3 py-2 bg-butter-50 border-2 border-butter-200 rounded-xl text-warmbrown-800 placeholder-amber-300 font-bold focus:bg-white focus:border-butter-400 outline-none transition">
+                        </div>
+
+                        <!-- 生日 -->
+                        <div class="sm:col-span-4">
+                            <label class="block font-bold text-warmbrown-700 mb-1">出生年月日</label>
+                            <input type="date" id="patientDob" onchange="calculateAgeFromDob()"
+                                class="w-full px-3 py-2 bg-butter-50 border-2 border-butter-200 rounded-xl text-warmbrown-800 font-bold focus:bg-white focus:border-butter-400 outline-none transition">
+                        </div>
+
+                        <!-- 歲數 -->
+                        <div class="sm:col-span-4">
+                            <label class="block font-bold text-warmbrown-700 mb-1">歲數 (可手動修改)</label>
+                            <input type="number" id="patientAge" min="0" max="130" placeholder="年齡"
+                                class="w-full px-3 py-2 bg-butter-50 border-2 border-butter-200 rounded-xl text-warmbrown-800 font-bold focus:bg-white focus:border-butter-400 outline-none transition text-center">
+                        </div>
+
+                        <!-- 生理性別 -->
+                        <div class="sm:col-span-6">
+                            <label class="block font-bold text-warmbrown-700 mb-1">生理性別</label>
+                            <div class="grid grid-cols-3 gap-1 bg-butter-100 p-1 rounded-xl border border-butter-200">
+                                <label class="cursor-pointer text-center">
+                                    <input type="radio" name="patientGender" value="男" class="sr-only peer">
+                                    <span class="block py-1.5 font-black rounded-lg text-amber-900 peer-checked:bg-white peer-checked:shadow-sm transition">男</span>
+                                </label>
+                                <label class="cursor-pointer text-center">
+                                    <input type="radio" name="patientGender" value="女" class="sr-only peer">
+                                    <span class="block py-1.5 font-black rounded-lg text-amber-900 peer-checked:bg-white peer-checked:shadow-sm transition">女</span>
+                                </label>
+                                <label class="cursor-pointer text-center">
+                                    <input type="radio" name="patientGender" value="其他" class="sr-only peer">
+                                    <span class="block py-1.5 font-black rounded-lg text-amber-900 peer-checked:bg-white peer-checked:shadow-sm transition">其他</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 評估人員 (護理師) -->
+                        <div class="sm:col-span-6">
+                            <label class="block font-bold text-warmbrown-700 mb-1">評估人員 (護理人員)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-amber-400 pointer-events-none">
+                                    <i class="fa-solid fa-user-nurse"></i>
+                                </span>
+                                <input type="text" id="evaluatorName" placeholder="例如：林護理師 (N102)"
+                                    class="w-full pl-8 pr-3 py-2 bg-butter-50 border-2 border-butter-200 rounded-xl text-warmbrown-800 placeholder-amber-300 font-bold focus:bg-white focus:border-butter-400 outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 生命徵象 (Vital Signs) 卡片 (耳溫、血壓、脈搏、呼吸) -->
+                <div class="cute-card rounded-3xl p-5 sm:p-6 transition-all">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b-2 border-butter-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🩺</span>
+                            <h2 class="font-extrabold text-sm sm:text-base text-warmbrown-700">步驟 2：生命徵象量測 (Vital Signs)</h2>
+                        </div>
+                        <span class="text-[11px] text-amber-700/80 font-bold">輸入耳溫若 &ge; 38°C 系統貼心輔助</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <!-- 耳溫 -->
+                        <div class="bg-amber-50/70 p-3 rounded-2xl border-2 border-amber-200">
+                            <div class="flex items-center justify-between font-bold text-amber-900 mb-1">
+                                <span>耳溫 (T)</span>
+                                <span class="text-xs">🌡️</span>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.1" id="vitalTemp" placeholder="36.8" oninput="checkTempWarning()"
+                                    class="w-full bg-white border border-amber-300 rounded-lg py-1.5 px-2 font-black text-warmbrown-800 text-center outline-none focus:border-amber-500">
+                                <span class="ml-1 text-[11px] font-bold text-amber-800">°C</span>
+                            </div>
+                            <div id="tempAlertBadge" class="text-[10px] text-amber-700 mt-1 font-bold text-center">正常範圍</div>
+                        </div>
+
+                        <!-- 血壓 -->
+                        <div class="bg-sky-50/70 p-3 rounded-2xl border-2 border-sky-200">
+                            <div class="flex items-center justify-between font-bold text-sky-900 mb-1">
+                                <span>血壓 (BP)</span>
+                                <span class="text-xs">💓</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="vitalSbp" placeholder="120"
+                                    class="w-full bg-white border border-sky-300 rounded-lg py-1.5 px-1 font-black text-warmbrown-800 text-center outline-none focus:border-sky-500 text-xs" title="收縮壓">
+                                <span class="text-slate-400 font-bold">/</span>
+                                <input type="number" id="vitalDbp" placeholder="80"
+                                    class="w-full bg-white border border-sky-300 rounded-lg py-1.5 px-1 font-black text-warmbrown-800 text-center outline-none focus:border-sky-500 text-xs" title="舒張壓">
+                            </div>
+                            <div class="text-[10px] text-sky-700 mt-1 font-bold text-center">mmHg</div>
+                        </div>
+
+                        <!-- 脈搏 -->
+                        <div class="bg-rose-50/70 p-3 rounded-2xl border-2 border-rose-200">
+                            <div class="flex items-center justify-between font-bold text-rose-900 mb-1">
+                                <span>脈搏 (PR)</span>
+                                <span class="text-xs">🫀</span>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" id="vitalPulse" placeholder="72"
+                                    class="w-full bg-white border border-rose-300 rounded-lg py-1.5 px-2 font-black text-warmbrown-800 text-center outline-none focus:border-rose-500">
+                                <span class="ml-1 text-[11px] font-bold text-rose-800">次/分</span>
+                            </div>
+                            <div class="text-[10px] text-rose-700 mt-1 font-bold text-center">正常 60~100</div>
+                        </div>
+
+                        <!-- 呼吸 -->
+                        <div class="bg-emerald-50/70 p-3 rounded-2xl border-2 border-emerald-200">
+                            <div class="flex items-center justify-between font-bold text-emerald-900 mb-1">
+                                <span>呼吸 (RR)</span>
+                                <span class="text-xs">🫁</span>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" id="vitalResp" placeholder="18"
+                                    class="w-full bg-white border border-emerald-300 rounded-lg py-1.5 px-2 font-black text-warmbrown-800 text-center outline-none focus:border-emerald-500">
+                                <span class="ml-1 text-[11px] font-bold text-emerald-800">次/分</span>
+                            </div>
+                            <div class="text-[10px] text-emerald-700 mt-1 font-bold text-center">正常 12~20</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 5大臨床主訴症狀卡片 (C4.5 模型輸入) -->
+                <div class="cute-card rounded-3xl p-5 sm:p-6 transition-all">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b-2 border-butter-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🩺</span>
+                            <h2 class="font-extrabold text-sm sm:text-base text-warmbrown-700">步驟 3：點選 5 大症狀</h2>
+                            <span id="selectedCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-butter-200 text-amber-900 font-black">已選 0/5</span>
+                        </div>
+                        <button type="button" onclick="clearCurrentForm()" class="text-xs text-amber-700/70 hover:text-rose-600 font-bold transition flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i> 清除重填
+                        </button>
+                    </div>
+
+                    <form id="symptomForm" class="space-y-3">
+                        
+                        <!-- 淋巴腺腫脹 (核心一級節點) -->
+                        <div class="p-3.5 rounded-2xl border-2 border-amber-300 bg-amber-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-2xl bg-amber-200 text-amber-900 flex items-center justify-center text-base flex-shrink-0 shadow-inner">
+                                    🔍
+                                </div>
+                                <div>
+                                    <div class="text-sm font-black text-warmbrown-800 flex items-center gap-1.5">
+                                        淋巴腺腫脹
+                                        <span class="text-[10px] bg-amber-400 text-warmbrown-900 font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">決策核心 ⭐</span>
+                                    </div>
+                                    <div class="text-xs text-amber-700 font-medium">頸部、下頜淋巴結可觸及腫痛硬塊</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 bg-amber-200/50 p-1 rounded-2xl">
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="swollen_glands" value="yes" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:shadow-cute transition-all">是 (有)</span>
+                                </label>
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="swollen_glands" value="no" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-warmbrown-600 peer-checked:text-white peer-checked:shadow-cute transition-all">否 (無)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 發燒 (核心二級節點) -->
+                        <div class="p-3.5 rounded-2xl border-2 border-butter-200 bg-white hover:border-butter-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-base flex-shrink-0">
+                                    🌡️️
+                                </div>
+                                <div>
+                                    <div class="text-sm font-black text-warmbrown-800 flex items-center gap-1.5">
+                                        發燒
+                                        <span class="text-[10px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.5 rounded-full">重要判斷</span>
+                                    </div>
+                                    <div class="text-xs text-slate-400 font-medium">耳溫 &ge; 38°C、身體發熱寒顫</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 bg-butter-100 p-1 rounded-2xl">
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="fever" id="feverYes" value="yes" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:shadow-cute transition-all">是 (有)</span>
+                                </label>
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="fever" id="feverNo" value="no" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-warmbrown-600 peer-checked:text-white peer-checked:shadow-cute transition-all">否 (無)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 喉嚨痛 -->
+                        <div class="p-3.5 rounded-2xl border-2 border-butter-100 bg-white hover:border-butter-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-base flex-shrink-0">
+                                    😣
+                                </div>
+                                <div>
+                                    <div class="text-sm font-black text-warmbrown-800">喉嚨痛</div>
+                                    <div class="text-xs text-slate-400 font-medium">咽喉疼痛發紅、吞嚥困難刺痛</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 bg-butter-100 p-1 rounded-2xl">
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="sore_throat" value="yes" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:shadow-cute transition-all">是 (有)</span>
+                                </label>
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="sore_throat" value="no" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-warmbrown-600 peer-checked:text-white peer-checked:shadow-cute transition-all">否 (無)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 充血 -->
+                        <div class="p-3.5 rounded-2xl border-2 border-butter-100 bg-white hover:border-butter-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-base flex-shrink-0">
+                                    🤧
+                                </div>
+                                <div>
+                                    <div class="text-sm font-black text-warmbrown-800">充血 (鼻塞/黏膜充血)</div>
+                                    <div class="text-xs text-slate-400 font-medium">鼻黏膜水腫、流清鼻水或鼻塞呼吸不暢</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 bg-butter-100 p-1 rounded-2xl">
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="congestion" value="yes" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:shadow-cute transition-all">是 (有)</span>
+                                </label>
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="congestion" value="no" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-warmbrown-600 peer-checked:text-white peer-checked:shadow-cute transition-all">否 (無)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 頭痛 -->
+                        <div class="p-3.5 rounded-2xl border-2 border-butter-100 bg-white hover:border-butter-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-base flex-shrink-0">
+                                    🤕
+                                </div>
+                                <div>
+                                    <div class="text-sm font-black text-warmbrown-800">頭痛</div>
+                                    <div class="text-xs text-slate-400 font-medium">前額、頭頂或太陽穴兩側脹痛</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 bg-butter-100 p-1 rounded-2xl">
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="headache" value="yes" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:shadow-cute transition-all">是 (有)</span>
+                                </label>
+                                <label class="flex-1 sm:flex-none cursor-pointer">
+                                    <input type="radio" name="headache" value="no" onchange="runInference()" class="sr-only peer">
+                                    <span class="btn-touch px-5 py-2 inline-flex items-center justify-center text-xs font-black rounded-xl text-amber-900 peer-checked:bg-warmbrown-600 peer-checked:text-white peer-checked:shadow-cute transition-all">否 (無)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <!-- 右側即時診斷與記錄操作區塊 (佔 5 欄) -->
+            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
+                
+                <!-- 【嚴格規範】：未選任何症狀時，診斷結果區塊必須完全為空白 -->
+                <div id="diagnosticCardContainer" class="min-h-[260px] transition-all duration-300">
+                    <!-- 初始狀態完全留白 -->
+                </div>
+
+                <!-- 清楚易懂的色彩對照與 C4.5 邏輯卡 -->
+                <div class="bg-white rounded-3xl p-5 border-2 border-butter-200 shadow-sm text-xs space-y-3">
+                    <div class="font-extrabold flex items-center justify-between text-warmbrown-800">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-notes-medical text-amber-500"></i> 診斷結果色彩標籤與分類依據</span>
+                    </div>
+
+                    <div class="space-y-2 text-xs font-bold">
+                        <div class="flex items-center justify-between p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-500"></span> 鏈球菌性喉炎</span>
+                            <span class="text-[11px] font-mono">淋巴腺腫脹 = 是</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500"></span> 感冒 (Cold)</span>
+                            <span class="text-[11px] font-mono">無淋巴腫 且 發燒 = 是</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> 過敏 (Allergy)</span>
+                            <span class="text-[11px] font-mono">無淋巴腫 且 發燒 = 否</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 下半部：護理就診統計與歷程管理大看板 -->
+        <section class="cute-card rounded-3xl p-6 sm:p-8 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-2 border-butter-100">
+                <div>
+                    <h2 class="text-base sm:text-lg font-black text-warmbrown-800 flex items-center gap-2">
+                        <span class="text-xl">📊</span> 護理就診與生理數據統計總覽
+                    </h2>
+                    <p class="text-xs text-amber-700/80 font-bold mt-0.5">即時統計就診人數、生命徵象異常概況與疾病分佈</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" onclick="exportDataToCSV()" class="px-4 py-2 bg-white hover:bg-butter-50 text-warmbrown-800 border-2 border-butter-300 rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i> 匯出完整 CSV
+                    </button>
+                    <button type="button" onclick="clearAllDataRecords()" class="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-2xl text-xs font-black flex items-center gap-1.5 transition active:scale-95">
+                        <i class="fa-regular fa-trash-can"></i> 清空統計
+                    </button>
+                </div>
+            </div>
+
+            <!-- 關鍵指標卡片 (4 格 RWD，顏色對應明確) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- 總評估 -->
+                <div class="bg-butter-100/70 border-2 border-butter-200 rounded-2xl p-4 text-center">
+                    <div class="text-xs font-black text-amber-900">總就診人次</div>
+                    <div class="text-3xl font-black text-warmbrown-800 mt-1" id="statTotal">0</div>
+                    <div class="text-[11px] font-bold text-amber-800 mt-1" id="statAvgAge">平均年齡：- 歲</div>
+                </div>
+
+                <!-- 鏈球菌喉炎 (粉紅代表) -->
+                <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 text-center">
+                    <div class="text-xs font-black text-rose-700 flex items-center justify-center gap-1">
+                        鏈球菌性喉炎 🦠
+                    </div>
+                    <div class="text-3xl font-black text-rose-600 mt-1" id="statStrep">0</div>
+                    <div class="text-[11px] font-bold text-rose-500 mt-1" id="statStrepPct">佔比 0.0%</div>
+                </div>
+
+                <!-- 感冒 (暖黃代表) -->
+                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
+                    <div class="text-xs font-black text-amber-900 flex items-center justify-center gap-1">
+                        感冒 (Cold) 🍵
+                    </div>
+                    <div class="text-3xl font-black text-amber-600 mt-1" id="statCold">0</div>
+                    <div class="text-[11px] font-bold text-amber-700 mt-1" id="statColdPct">佔比 0.0%</div>
+                </div>
+
+                <!-- 過敏 (翠綠代表) -->
+                <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 text-center">
+                    <div class="text-xs font-black text-emerald-800 flex items-center justify-center gap-1">
+                        過敏 (Allergy) 🌸
+                    </div>
+                    <div class="text-3xl font-black text-emerald-600 mt-1" id="statAllergy">0</div>
+                    <div class="text-[11px] font-bold text-emerald-700 mt-1" id="statAllergyPct">佔比 0.0%</div>
+                </div>
+            </div>
+
+            <!-- 圖表區與統計比例 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <!-- 疾病分佈圓餅圖 -->
+                <div class="md:col-span-5 bg-butter-50/50 rounded-2xl p-4 border border-butter-200 flex flex-col items-center">
+                    <span class="text-xs font-black text-warmbrown-800 mb-2">診斷結果分類佔比</span>
+                    <div class="w-48 h-48 relative">
+                        <canvas id="diseasePieChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 性別比例與生命徵象監測摘要 -->
+                <div class="md:col-span-7 space-y-4">
+                    <!-- 性別分佈 -->
+                    <div class="bg-white rounded-2xl p-4 border border-butter-200">
+                        <div class="flex justify-between items-center text-xs font-bold text-warmbrown-700 mb-2">
+                            <span>病患生理性別比例</span>
+                            <span id="genderStatsLabel" class="text-amber-800">男 0人 ‧ 女 0人 ‧ 其他 0人</span>
+                        </div>
+                        <div class="w-full h-4 bg-butter-100 rounded-full overflow-hidden flex p-0.5 border border-butter-200">
+                            <div id="barMale" class="bg-sky-400 rounded-full h-full transition-all duration-300" style="width: 0%"></div>
+                            <div id="barFemale" class="bg-rose-400 rounded-full h-full transition-all duration-300" style="width: 0%"></div>
+                            <div id="barOther" class="bg-amber-300 rounded-full h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-black text-slate-400 mt-1.5 px-1">
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span> 男性</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span> 女性</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-300"></span> 其他</span>
+                        </div>
+                    </div>
+
+                    <!-- 監測重點快覽 (發燒人次 / 呼吸脈搏異常) -->
+                    <div class="bg-butter-50/50 rounded-2xl p-4 border border-butter-200">
+                        <div class="text-xs font-black text-warmbrown-800 mb-2">生命徵象快覽提醒</div>
+                        <div class="grid grid-cols-2 gap-3 text-center text-xs font-bold">
+                            <div class="bg-white p-2.5 rounded-xl border border-rose-200">
+                                <span class="text-rose-600 block text-[11px]">發燒人次 (耳溫 &ge; 38°C)</span>
+                                <span class="text-warmbrown-800 text-base font-black" id="statFeverCount">0 人</span>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-xl border border-sky-200">
+                                <span class="text-sky-600 block text-[11px]">年齡層分佈 (兒少 / 成人 / 長者)</span>
+                                <span class="text-warmbrown-800 text-sm font-black" id="statAgeGroups">0 / 0 / 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 病歷歷史清單詳細表格 (包含生命徵象、評估人與5大症狀) -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-black text-warmbrown-800 uppercase tracking-wider">最近評估紀錄清單 (含完整生命徵象)</h3>
+                    <span class="text-[11px] text-amber-800 font-bold" id="tableCountLabel">共 0 筆紀錄</span>
+                </div>
+                
+                <div class="overflow-x-auto rounded-2xl border-2 border-butter-200 shadow-sm">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-butter-100 text-amber-900 font-black border-b-2 border-butter-200">
+                            <tr>
+                                <th class="p-3.5 whitespace-nowrap">登記時間</th>
+                                <th class="p-3.5 whitespace-nowrap">病患資訊 (姓名/年齡/性別)</th>
+                                <th class="p-3.5 whitespace-nowrap">生日</th>
+                                <th class="p-3.5 whitespace-nowrap">生命徵象 (T / BP / PR / RR)</th>
+                                <th class="p-3.5 whitespace-nowrap">5 大症狀 (喉/燒/腺/血/頭)</th>
+                                <th class="p-3.5 whitespace-nowrap">推論診斷結果</th>
+                                <th class="p-3.5 whitespace-nowrap">評估人</th>
+                                <th class="p-3.5 text-right whitespace-nowrap">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody" class="divide-y divide-butter-100 bg-white font-bold text-warmbrown-800">
+                            <tr>
+                                <td colspan="8" class="p-8 text-center text-amber-400">目前尚無評估紀錄，請於上方輸入病患資料並完成評估</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="bg-white/80 border-t border-butter-200 py-4 text-center text-xs text-amber-800/60 font-bold mt-12">
+        護理臨床決策與生命徵象系統 ‧ 依據 C4.5 決策樹演算法 ‧ 本地端資料持久化
+    </footer>
+
+    <script>
+        // 本地儲存
+        let records = JSON.parse(localStorage.getItem('nursing_full_records') || '[]');
+        let currentInferenceResult = null;
+        let pieChartInstance = null;
+
+        const SYMPTOM_KEYS = ['swollen_glands', 'fever', 'sore_throat', 'congestion', 'headache'];
+
+        function getRadioValue(name) {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : null;
+        }
+
+        // 依據出生年月日自動換算歲數
+        function calculateAgeFromDob() {
+            const dobVal = document.getElementById('patientDob').value;
+            if (!dobVal) return;
+            const dob = new Date(dobVal);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            if (age >= 0) {
+                document.getElementById('patientAge').value = age;
+            }
+        }
+
+        // 耳溫輸入警示 & 連動發燒提示
+        function checkTempWarning() {
+            const tempInput = document.getElementById('vitalTemp');
+            const tempVal = parseFloat(tempInput.value);
+            const badge = document.getElementById('tempAlertBadge');
+            const feverYes = document.getElementById('feverYes');
+
+            if (isNaN(tempVal)) {
+                badge.innerText = '正常範圍';
+                badge.className = 'text-[10px] text-amber-700 mt-1 font-bold text-center';
+                return;
+            }
+
+            if (tempVal >= 38.0) {
+                badge.innerText = '⚠️ 體溫偏高 (發燒)';
+                badge.className = 'text-[10px] text-rose-600 mt-1 font-black text-center animate-pulse';
+                // 若發燒尚未勾選，自動切換為發燒 yes
+                if (!feverYes.checked) {
+                    feverYes.checked = true;
+                    runInference();
+                }
+            } else if (tempVal <= 35.5) {
+                badge.innerText = '❄️ 體溫過低';
+                badge.className = 'text-[10px] text-sky-600 mt-1 font-bold text-center';
+            } else {
+                badge.innerText = '體溫正常';
+                badge.className = 'text-[10px] text-emerald-700 mt-1 font-bold text-center';
+            }
+        }
+
+        // C4.5 決策樹推論函數
+        function runInference() {
+            let checkedCount = 0;
+            const values = {};
+            
+            SYMPTOM_KEYS.forEach(key => {
+                values[key] = getRadioValue(key);
+                if (values[key] !== null) checkedCount++;
+            });
+
+            document.getElementById('selectedCountBadge').innerText = `已選 ${checkedCount}/5`;
+
+            const container = document.getElementById('diagnosticCardContainer');
+
+            // 【核心規範】：未選擇任何症狀時，診斷結果區塊必須完全為空白
+            if (checkedCount === 0) {
+                container.innerHTML = '';
+                currentInferenceResult = null;
+                return;
+            }
+
+            const swollen = values['swollen_glands'];
+            const fever = values['fever'];
+
+            let diagnosis = null;
+            let badgeBg = '';
+            let emoji = '';
+            let carePlan = '';
+            let colorKey = '';
+
+            /*
+             * C4.5 決策樹分類規則：
+             * 1. 淋巴腺腫脹 = yes => 鏈球菌性喉炎
+             * 2. 淋巴腺腫脹 = no 且 發燒 = no => 過敏
+             * 3. 淋巴腺腫脹 = no 且 發燒 = yes => 感冒
+             */
+            if (swollen === 'yes') {
+                diagnosis = '鏈球菌性喉炎';
+                emoji = '🦠';
+                colorKey = 'rose';
+                badgeBg = 'bg-rose-500 text-white';
+                carePlan = '建議採檢喉頭拭子 (RADT) 快篩，注意飛沫防護，依醫囑進行抗生素治療評估。';
+            } else if (swollen === 'no') {
+                if (fever === 'yes') {
+                    diagnosis = '感冒';
+                    emoji = '🍵';
+                    colorKey = 'amber';
+                    badgeBg = 'bg-amber-500 text-white';
+                    carePlan = '密切監測耳溫變化，建議多喝溫水休息，並適時給予解熱鎮痛藥物照護。';
+                } else if (fever === 'no') {
+                    diagnosis = '過敏';
+                    emoji = '🌸';
+                    colorKey = 'emerald';
+                    badgeBg = 'bg-emerald-500 text-white';
+                    carePlan = '評估過敏原接觸史，保持環境通風濕度，必要時使用抗組織胺對症處置。';
+                } else {
+                    renderMissingAlert(container, '需補充勾選「發燒」項目才能做出推論！');
+                    currentInferenceResult = null;
+                    return;
+                }
+            } else {
+                renderMissingAlert(container, '請先點選關鍵指標「淋巴腺腫脹」項目！');
+                currentInferenceResult = null;
+                return;
+            }
+
+            currentInferenceResult = {
+                diagnosis: diagnosis,
+                emoji: emoji,
+                colorKey: colorKey
+            };
+
+            // 渲染診斷結果卡片
+            container.innerHTML = `
+                <div class="cute-card rounded-3xl p-6 border-4 border-${colorKey}-300 bg-white text-center shadow-soft animate-fade-in space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b-2 border-butter-100">
+                        <span class="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                            <span>✨</span> 診斷推論完成
+                        </span>
+                        <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full ${badgeBg}">C4.5 決策</span>
+                    </div>
+
+                    <div class="py-2">
+                        <div class="text-4xl mb-1">${emoji}</div>
+                        <div class="text-2xl sm:text-3xl font-black text-${colorKey}-600 tracking-tight">${diagnosis}</div>
+                        <div class="text-xs font-bold text-slate-500 mt-2 bg-butter-50 p-3 rounded-2xl border border-butter-200 text-left">
+                            <span class="text-warmbrown-800 font-black">護理照護提醒：</span>${carePlan}
+                        </div>
+                    </div>
+
+                    <!-- 存入統計按鈕 -->
+                    <button type="button" onclick="saveRecordToStats()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-butter-500 hover:from-amber-500 hover:to-butter-600 text-warmbrown-900 font-black rounded-2xl text-sm shadow-cute active:translate-y-1 active:shadow-cute-active flex items-center justify-center gap-2 transition duration-150">
+                        <span>📥</span> 存入病歷統計與生命徵象資料庫
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderMissingAlert(container, hint) {
+            container.innerHTML = `
+                <div class="cute-card rounded-3xl p-6 border-2 border-dashed border-amber-300 bg-butter-50/60 text-center space-y-2">
+                    <div class="text-3xl">🐾</div>
+                    <div class="text-sm font-black text-warmbrown-800">尚待補充關鍵項目</div>
+                    <div class="text-xs text-amber-700 font-bold">${hint}</div>
+                </div>
+            `;
+        }
+
+        // 存入統計記錄庫
+        function saveRecordToStats() {
+            if (!currentInferenceResult) return;
+
+            const name = document.getElementById('patientName').value.trim() || '未填病患';
+            const dob = document.getElementById('patientDob').value || '-';
+            const ageInput = document.getElementById('patientAge').value.trim();
+            const age = ageInput !== '' ? parseInt(ageInput) : null;
+            const genderEl = document.querySelector('input[name="patientGender"]:checked');
+            const gender = genderEl ? genderEl.value : '未註記';
+            const evaluator = document.getElementById('evaluatorName').value.trim() || '值班護理師';
+
+            // 生命徵象
+            const temp = document.getElementById('vitalTemp').value.trim() || '-';
+            const sbp = document.getElementById('vitalSbp').value.trim();
+            const dbp = document.getElementById('vitalDbp').value.trim();
+            const bp = (sbp || dbp) ? `${sbp || '?'}/${dbp || '?'}` : '-';
+            const pulse = document.getElementById('vitalPulse').value.trim() || '-';
+            const resp = document.getElementById('vitalResp').value.trim() || '-';
+
+            const record = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                name: name,
+                dob: dob,
+                age: age,
+                gender: gender,
+                evaluator: evaluator,
+                vitals: { temp, bp, pulse, resp },
+                symptoms: {
+                    swollen_glands: getRadioValue('swollen_glands') || 'no',
+                    fever: getRadioValue('fever') || 'no',
+                    sore_throat: getRadioValue('sore_throat') || 'no',
+                    congestion: getRadioValue('congestion') || 'no',
+                    headache: getRadioValue('headache') || 'no'
+                },
+                diagnosis: currentInferenceResult.diagnosis,
+                emoji: currentInferenceResult.emoji
+            };
+
+            records.unshift(record);
+            localStorage.setItem('nursing_full_records', JSON.stringify(records));
+
+            updateDashboardUI();
+            alert(`🎉 已成功儲存病患【${record.name}】（評估人：${record.evaluator}）之診斷與生理數據！`);
+            clearCurrentForm();
+        }
+
+        // 清空表單
+        function clearCurrentForm() {
+            document.getElementById('patientName').value = '';
+            document.getElementById('patientDob').value = '';
+            document.getElementById('patientAge').value = '';
+            document.querySelectorAll('input[name="patientGender"]').forEach(r => r.checked = false);
+            // 評估人姓名可保留以方便同一護理人員連續輸入
+            document.getElementById('vitalTemp').value = '';
+            document.getElementById('vitalSbp').value = '';
+            document.getElementById('vitalDbp').value = '';
+            document.getElementById('vitalPulse').value = '';
+            document.getElementById('vitalResp').value = '';
+            document.getElementById('tempAlertBadge').innerText = '正常範圍';
+            document.getElementById('tempAlertBadge').className = 'text-[10px] text-amber-700 mt-1 font-bold text-center';
+
+            document.getElementById('symptomForm').reset();
+            runInference(); // 依規定重設後卡片完全保持空白
+        }
+
+        // 更新統計看板與表格
+        function updateDashboardUI() {
+            const total = records.length;
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('tableCountLabel').innerText = `共 ${total} 筆紀錄`;
+
+            const counts = { '鏈球菌性喉炎': 0, '感冒': 0, '過敏': 0 };
+            const genders = { '男': 0, '女': 0, '其他': 0, '未註記': 0 };
+            let totalAge = 0;
+            let validAgeCount = 0;
+            let feverCount = 0;
+
+            let ageChild = 0, ageAdult = 0, ageElder = 0;
+
+            records.forEach(r => {
+                if (counts[r.diagnosis] !== undefined) counts[r.diagnosis]++;
+                if (genders[r.gender] !== undefined) genders[r.gender]++;
+
+                if (r.age !== null && !isNaN(r.age)) {
+                    totalAge += r.age;
+                    validAgeCount++;
+                    if (r.age < 18) ageChild++;
+                    else if (r.age >= 65) ageElder++;
+                    else ageAdult++;
+                }
+
+                // 檢查耳溫發燒
+                const t = parseFloat(r.vitals.temp);
+                if (!isNaN(t) && t >= 38.0) feverCount++;
+            });
+
+            // 百分比輔助
+            const pct = count => total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
+
+            document.getElementById('statStrep').innerText = counts['鏈球菌性喉炎'];
+            document.getElementById('statStrepPct').innerText = `佔比 ${pct(counts['鏈球菌性喉炎'])}%`;
+
+            document.getElementById('statCold').innerText = counts['感冒'];
+            document.getElementById('statColdPct').innerText = `佔比 ${pct(counts['感冒'])}%`;
+
+            document.getElementById('statAllergy').innerText = counts['過敏'];
+            document.getElementById('statAllergyPct').innerText = `佔比 ${pct(counts['過敏'])}%`;
+
+            // 平均年齡與指標
+            document.getElementById('statAvgAge').innerText = validAgeCount > 0 ? `平均年齡：${(totalAge / validAgeCount).toFixed(1)} 歲` : '平均年齡：- 歲';
+            document.getElementById('statFeverCount').innerText = `${feverCount} 人`;
+            document.getElementById('statAgeGroups').innerText = `${ageChild} / ${ageAdult} / ${ageElder}`;
+
+            // 性別比例條
+            const mPct = total > 0 ? (genders['男'] / total) * 100 : 0;
+            const fPct = total > 0 ? (genders['女'] / total) * 100 : 0;
+            const oPct = total > 0 ? ((genders['其他'] + genders['未註記']) / total) * 100 : 0;
+
+            document.getElementById('barMale').style.width = `${mPct}%`;
+            document.getElementById('barFemale').style.width = `${fPct}%`;
+            document.getElementById('barOther').style.width = `${oPct}%`;
+            document.getElementById('genderStatsLabel').innerText = `男 ${genders['男']}人 ‧ 女 ${genders['女']}人 ‧ 其他 ${genders['其他'] + genders['未註記']}人`;
+
+            // 表格渲染
+            const tbody = document.getElementById('recordsTableBody');
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-amber-400">目前尚無評估紀錄，請於上方輸入病患資料並完成評估</td></tr>`;
+            } else {
+                tbody.innerHTML = records.map(r => {
+                    const s = r.symptoms;
+                    const v = r.vitals;
+                    const boolBadge = val => val === 'yes' ? '<span class="text-amber-600 font-black">有</span>' : '<span class="text-slate-300">無</span>';
+
+                    let tagColor = 'bg-butter-100 text-amber-900 border border-butter-300';
+                    if (r.diagnosis === '鏈球菌性喉炎') tagColor = 'bg-rose-100 text-rose-700 border border-rose-300';
+                    if (r.diagnosis === '感冒') tagColor = 'bg-amber-100 text-amber-800 border border-amber-300';
+                    if (r.diagnosis === '過敏') tagColor = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+
+                    // 生命徵象格式化標記 (耳溫超標醒目)
+                    const tempDisplay = (parseFloat(v.temp) >= 38.0) 
+                        ? `<span class="text-rose-600 font-black">${v.temp}°C 🔥</span>` 
+                        : `${v.temp !== '-' ? v.temp + '°C' : '-'}`;
+
+                    return `
+                        <tr class="hover:bg-butter-50/60 transition">
+                            <td class="p-3.5 whitespace-nowrap text-amber-800/80">${r.date} ${r.time}</td>
+                            <td class="p-3.5 whitespace-nowrap">
+                                <div class="font-black text-warmbrown-800">${r.name}</div>
+                                <div class="text-[10px] text-slate-400">${r.age !== null ? r.age + '歲' : '-'} / ${r.gender}</div>
+                            </td>
+                            <td class="p-3.5 whitespace-nowrap text-slate-500 font-mono text-[11px]">${r.dob}</td>
+                            <td class="p-3.5 whitespace-nowrap">
+                                <div class="font-mono text-[11px] space-x-1">
+                                    <span>T:${tempDisplay}</span> | 
+                                    <span>BP:${v.bp}</span> | 
+                                    <span>PR:${v.pulse}</span> | 
+                                    <span>RR:${v.resp}</span>
+                                </div>
+                            </td>
+                            <td class="p-3.5 whitespace-nowrap font-mono text-[11px]">
+                                ${boolBadge(s.sore_throat)} / ${boolBadge(s.fever)} / ${boolBadge(s.swollen_glands)} / ${boolBadge(s.congestion)} / ${boolBadge(s.headache)}
+                            </td>
+                            <td class="p-3.5 whitespace-nowrap">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-black ${tagColor}">${r.emoji} ${r.diagnosis}</span>
+                            </td>
+                            <td class="p-3.5 whitespace-nowrap text-amber-900">${r.evaluator}</td>
+                            <td class="p-3.5 text-right whitespace-nowrap">
+                                <button onclick="deleteSingleRecord(${r.id})" class="text-slate-300 hover:text-rose-500 transition p-1" title="刪除此筆">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // 更新圓餅圖
+            updateChart(counts);
+        }
+
+        // 圓餅圖
+        function updateChart(counts) {
+            const ctx = document.getElementById('diseasePieChart').getContext('2d');
+            const dataVals = [counts['鏈球菌性喉炎'], counts['感冒'], counts['過敏']];
+
+            if (pieChartInstance) {
+                pieChartInstance.data.datasets[0].data = dataVals;
+                pieChartInstance.update();
+            } else {
+                pieChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['鏈球菌喉炎', '感冒', '過敏'],
+                        datasets: [{
+                            data: dataVals,
+                            backgroundColor: ['#FDA4AF', '#FCD34D', '#6EE7B7'],
+                            borderWidth: 3,
+                            borderColor: '#FFFFFF'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { family: 'Zen Maru Gothic', weight: 'bold', size: 10 },
+                                    boxWidth: 10
+                                }
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+        }
+
+        // 單筆刪除
+        function deleteSingleRecord(id) {
+            records = records.filter(r => r.id !== id);
+            localStorage.setItem('nursing_full_records', JSON.stringify(records));
+            updateDashboardUI();
+        }
+
+        // 清空所有統計紀錄
+        function clearAllDataRecords() {
+            if (records.length === 0) return;
+            if (confirm('確定要清空所有已儲存的病歷與統計資料嗎？')) {
+                records = [];
+                localStorage.removeItem('nursing_full_records');
+                updateDashboardUI();
+            }
+        }
+
+        // 匯出完整 CSV
+        function exportDataToCSV() {
+            if (records.length === 0) {
+                alert('目前沒有任何病歷紀錄可供匯出！');
+                return;
+            }
+
+            let csv = '\uFEFF登記日期,登記時間,病患姓名,生日,歲數,性別,耳溫(°C),血壓(mmHg),脈搏(次/分),呼吸(次/分),喉嚨痛,發燒,淋巴腺腫脹,充血,頭痛,推論診斷結果,評估人員\n';
+            records.forEach(r => {
+                const s = r.symptoms;
+                const v = r.vitals;
+                csv += `"${r.date}","${r.time}","${r.name}","${r.dob}","${r.age || ''}","${r.gender}","${v.temp}","${v.bp}","${v.pulse}","${v.resp}","${s.sore_throat}","${s.fever}","${s.swollen_glands}","${s.congestion}","${s.headache}","${r.diagnosis}","${r.evaluator}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `護理臨床評估統計表_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 頁面初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            updateDashboardUI();
+            runInference(); // 確保初次進入時診斷卡片完全為空白
+        });
+    </script>
+</body>
+</html>
